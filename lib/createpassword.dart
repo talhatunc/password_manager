@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:password_manager/main.dart';
+
+import 'dbservice.dart';
 
 class PasswordGeneratorScreen extends StatefulWidget {
   @override
@@ -43,6 +46,80 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       final snackBar = SnackBar(content: Text('Password copied to clipboard'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     });
+  }
+
+  void _confirmPassword() async {
+    final serviceIdController = TextEditingController();
+    final accountIdController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Details'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              cursorColor: Colors.blue,
+              controller: serviceIdController,
+              decoration: InputDecoration(labelText: 'Service',
+                labelStyle: TextStyle(color: Colors.blue),
+                focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.blue),),
+              ),
+            ),
+            TextField(
+              cursorColor: Colors.blue,
+              controller: accountIdController,
+              decoration: InputDecoration(labelText: 'Account ID',
+                labelStyle: TextStyle(color: Colors.blue),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue),),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.blue,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.blue,
+            ),
+            onPressed: () {
+              final serviceId = serviceIdController.text;
+              final accountId = accountIdController.text;
+
+              if (serviceId.isNotEmpty && accountId.isNotEmpty) {
+                Dbservice().insertPassword(
+                  _generatedPassword,
+                  serviceId,
+                  accountId,
+                );
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => PasswordManagerApp()),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Password saved to database')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Please fill in all fields')),
+                );
+              }
+            },
+            child: Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -158,9 +235,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.blue,
                     ),
-                    onPressed: () {
-
-                    },
+                      onPressed: _confirmPassword,
                     child: Row(
                       children: [
                         Icon(Icons.check),
